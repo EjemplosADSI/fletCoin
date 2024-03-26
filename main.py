@@ -1,16 +1,58 @@
-# This is a sample Python script.
-
-# Press Mayús+F10 to execute it or replace it with your code.
-# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
-
-
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press Ctrl+F8 to toggle the breakpoint.
+import flet as ft
+import requests
+from dataclasses import dataclass
 
 
-# Press the green button in the gutter to run the script.
-if __name__ == '__main__':
-    print_hi('PyCharm')
+@dataclass
+class Title:
+    t1: str
+    t2: str
 
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+    def widget(self):
+        c1 = ft.Container(content=ft.Text(self.t1), width=220)
+        c2 = ft.Container(content=ft.Text(self.t2))
+        rw = ft.Row([c1, c2], alignment=ft.MainAxisAlignment.START)
+        return rw
+
+
+@dataclass
+class Coin:
+    name: str
+    current_price: float
+    image: str
+
+    def widget(self):
+        c1 = ft.Container(content=ft.Text(self.name), width=200)
+        c2 = ft.Container(content=ft.Text(str(self.current_price)))
+        c3 = ft.Container(content=ft.Image(src=self.image, width=10))
+        rw = ft.Row([c3, c1, c2], alignment=ft.MainAxisAlignment.START)
+        return rw
+
+
+def get_data(list_view: ft.ListView):
+    url = "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd"
+
+    headers = {"x-cg-demo-api-key": "API KEY"}  #
+    response = requests.get(url, headers=headers).json()
+    coins = []
+    for item in response:
+        coin = Coin(item['name'],
+                    item['current_price'],
+                    item['image'])
+        list_view.controls.append(coin.widget())
+
+
+def main(page: ft.Page):
+    page.window_width = 400
+    list_view = ft.ListView(expand=True,
+                            spacing=10,
+                            divider_thickness=4)
+    list_view.controls.append(Title(
+        "Nombre", "Precio").widget())
+
+    page.add(list_view)
+    get_data(list_view)
+    page.update()
+
+
+ft.app(target=main)
